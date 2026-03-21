@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cprhrsyo1c4yb"]
+
+[ext_resource type="Theme" uid="uid://urkms4yhd17c" path="res://MahjongTileTheme.tres" id="1_2nfmx"]
+[ext_resource type="Script" uid="uid://ltfc2c0j6slu" path="res://MahjongTile.cs" id="2_tcin4"]
+
+[node name="PanelContainer" type="PanelContainer" unique_id=1577852728]
+offset_right = 40.0
+offset_bottom = 40.0
+theme = ExtResource("1_2nfmx")
+script = ExtResource("2_tcin4")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1603573397]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer" unique_id=1568678144]
+layout_mode = 2
