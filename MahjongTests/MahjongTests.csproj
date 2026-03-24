@@ -24,6 +24,7 @@
   <ItemGroup>
     <Compile Include="../MahjongTileData.cs"/>
     <Compile Include="../TileHandData.cs"/>
+    <Compile Include="../MeldValidator.cs"/>
   </ItemGroup>
 
 </Project>
