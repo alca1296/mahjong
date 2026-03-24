@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../MahjongTileData.cs"/>
-    <Compile Include="../TileHandData.cs"/>
-    <Compile Include="../MeldValidator.cs"/>
+    <Compile Include="../MahjongTile/MahjongTileData.cs"/>
+    <Compile Include="../TileHand/TileHandData.cs"/>
+    <Compile Include="../Validation/MeldValidator.cs"/>
   </ItemGroup>
 
 </Project>
