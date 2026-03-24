@@ -10,7 +10,7 @@
 ### Core OO Principles
 * Polymorphism
 
-    Right now, we use polymorphism 
+    Right now, we use polymorphism in the `PlayerDecisionMaker.cs`. This file has an interface  `IPlayerDecisionMaker` which represents a strategy for the game, with corresponding methods for what to do on the player's current turn and what to do on another player's turn (e.g., steal a discarded tile from someone else on their turn). There is also a method to make a discard decision, i.e. choose which tile to discard. Right now, we have some "AI" players that implement autonomous decisions for their turns. There is a smart AI and a bad AI, and their respective implementations for their turn, other turns, and discard reflects our use of polymorphism in making different strategies.
 
 * Dependency Injection
 
