@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cdvcq3ttdao5c"]
+
+[ext_resource type="Script" uid="uid://407lymx41ueo" path="res://TileHand.cs" id="1_ajg2f"]
+
+[node name="TileHand" type="VBoxContainer" unique_id=1289301232]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ajg2f")
+
+[node name="ConcealedTiles" type="HBoxContainer" parent="." unique_id=957802951]
+layout_mode = 2
+
+[node name="Melds" type="HBoxContainer" parent="." unique_id=435971620]
+layout_mode = 2
