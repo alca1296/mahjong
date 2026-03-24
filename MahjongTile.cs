@@ -1,27 +1,41 @@
 using Godot;
 using System;
 
-[Tool] 
+namespace Mahjong;
+
+[Tool]
 public partial class MahjongTile : PanelContainer
 {
-	// TODO: Winds and Dragons, they don't have numbers
-	public enum TileSuit { Dots, Bamboo, Characters }
+    private MahjongTileRecord _tile = null;
 
-	[Export] public TileSuit Suit = TileSuit.Dots;
-	[Export] public int Number = 1;
+    public MahjongTileRecord Tile
+    {
+        get => _tile;
+        set
+        {
+            _tile = value;
+            UpdateUI();
+        }
+    }
 
-	public override void _Process(double delta)
-	{
-		UpdateUI();
-	}
+    public override void _Ready()
+    {
+        UpdateUI();
+    }
 
-	private void UpdateUI()
-	{
-		var label = GetNodeOrNull<Label>("MarginContainer/Label");
-		
-		if (label != null)
-		{
-			label.Text = $"{Number}\n{Suit}";
-		}
-	}
+    private void UpdateUI()
+    {
+        var label = GetNodeOrNull<Label>("MarginContainer/Label");
+
+        if (label == null) return;
+
+        if (_tile == null)
+        {
+            label.Text = "No tile value set.";
+        }
+        else
+        {
+            label.Text = _tile.ToString(); ;
+        }
+    }
 }

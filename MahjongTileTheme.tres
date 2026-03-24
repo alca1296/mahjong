@@ -1,13 +1,17 @@
 [gd_resource type="Theme" format=3 uid="uid://urkms4yhd17c"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uc3tn"]
-bg_color = Color(0.91228896, 0.9122889, 0.91228884, 1)
+bg_color = Color(1, 1, 0.9411765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.627451, 0.5019608, 0.3764706, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
-shadow_size = 3
 
 [resource]
-Label/colors/font_color = Color(0.27022192, 0.27022192, 0.2702219, 1)
+Label/colors/font_color = Color(0.1749846, 0.17498463, 0.1749846, 1)
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_uc3tn")
