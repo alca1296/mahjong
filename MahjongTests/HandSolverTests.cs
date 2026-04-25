@@ -61,7 +61,7 @@ public class HandSolverTests
             W(WindType.North), W(WindType.North), W(WindType.North),
             D(DragonColor.Red), D(DragonColor.Red),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -77,7 +77,7 @@ public class HandSolverTests
             D(9), D(9), D(9),
             B(1), B(1),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -93,7 +93,7 @@ public class HandSolverTests
             W(WindType.North),      W(WindType.North),       W(WindType.North),
             C(5), C(5),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -110,7 +110,7 @@ public class HandSolverTests
             D(1), D(1), D(1),
             B(5), B(5),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -126,7 +126,7 @@ public class HandSolverTests
             B(9), B(9), B(9),
             C(8), C(8),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -143,7 +143,7 @@ public class HandSolverTests
             B(5), B(6), B(7),
             C(9), C(9),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -160,7 +160,7 @@ public class HandSolverTests
             D(3), D(3), D(3),
             B(5), B(6), B(7),
         };
-        var result = HandSolver.FindWinningHand(tiles);
+        var result = HandSolver.FindWinningHand(tiles, new List<Meld>());
         Assert.NotNull(result);
         AssertValidSolution(tiles, result!);
     }
@@ -168,7 +168,7 @@ public class HandSolverTests
     [Fact]
     public void EmptyHandReturnsNull()
     {
-        Assert.Null(HandSolver.FindWinningHand(new List<MahjongTileRecord>()));
+        Assert.Null(HandSolver.FindWinningHand(new List<MahjongTileRecord>(), new List<Meld>()));
     }
 
     [Fact]
@@ -183,6 +183,6 @@ public class HandSolverTests
             W(WindType.East), W(WindType.South), W(WindType.West),
             D(DragonColor.Red), D(DragonColor.Green),
         };
-        Assert.Null(HandSolver.FindWinningHand(tiles));
+        Assert.Null(HandSolver.FindWinningHand(tiles, new List<Meld>()));
     }
 }
