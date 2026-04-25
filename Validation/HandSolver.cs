@@ -140,7 +140,7 @@ public partial class HandSolver
     private static readonly int PartialMeldScore = 1;
     private static readonly int PairScore = 1;
 
-    public static int ScoreConcealedTiles(IReadOnlyList<MahjongTileRecord> tiles)
+    public static int ScoreConcealedTiles(IReadOnlyList<MahjongTileRecord> tiles, int meldsNeeded)
     {
         /*
         same idea as the hand validator. do a DFS over all decompositions 
@@ -160,7 +160,7 @@ public partial class HandSolver
             counts[tile] -= 2;
             // +1 for 
             int candidate = BestPartialScore(counts, meldsNeeded) + PairScore;
-            bestScore = System.Math.Max(best, candidate);
+            bestScore = System.Math.Max(bestScore, candidate);
             counts[tile] += 2;
         }
 
@@ -177,7 +177,7 @@ public partial class HandSolver
         return CompleteMeldScore * bestCompleteCount + PartialMeldScore * bestPartialCount;
     }
 
-    private static int BestPartialScoreSearch(
+    private static void BestPartialScoreSearch(
         Dictionary<MahjongTileRecord, int> counts,
         int meldsNeeded,
         int completeCount,
@@ -218,17 +218,17 @@ public partial class HandSolver
         }
 
         // complete a sequence?
-        if (tile is Suited s && s.Number <= 7)
+        if (tile is Suited s1 && s1.Number <= 7)
         {
-            var t2 = new Suited(s.Suit, s.Number + 1);
-            var t3 = new Suited(s.Suit, s.Number + 2);
+            var t2 = new Suited(s1.Suit, s1.Number + 1);
+            var t3 = new Suited(s1.Suit, s1.Number + 2);
             if (counts.GetValueOrDefault(t2) > 0 && counts.GetValueOrDefault(t3) > 0)
             {
                 counts[tile]--; 
                 counts[t2]--; 
                 counts[t3]--;
                 
-                BestPartialScoreSearch(counts, meldsNeeded, complete Count+ 1, partialCount, ref bestCompleteCount, ref bestPartialCount);
+                BestPartialScoreSearch(counts, meldsNeeded, completeCount+ 1, partialCount, ref bestCompleteCount, ref bestPartialCount);
 
                 counts[tile]++; 
                 counts[t2]++; 
@@ -245,14 +245,16 @@ public partial class HandSolver
         }
 
         // partial sequence
-        if (tile is Suited s)
+        if (tile is Suited s2)
         {
             // 2 sided sequence members
-            TryPartialSequence(counts, meldsNeeded, completeCount, partialCount, tile, new Suited(s.Suit, s.Number + 1), ref bestCompleteCount, ref bestPartialCount);
+            TryPartialSequence(counts, meldsNeeded, completeCount, partialCount, tile, new Suited(s2.Suit, s2.Number + 1), ref bestCompleteCount, ref bestPartialCount);
 
             // middle sequence member missing
-            TryPartialSequence(counts, meldsNeeded, completeCount, partialCount, tile, new Suited(s.Suit, s.Number + 2), ref bestCompleteCount, ref bestPartialCount);
+            TryPartialSequence(counts, meldsNeeded, completeCount, partialCount, tile, new Suited(s2.Suit, s2.Number + 2), ref bestCompleteCount, ref bestPartialCount);
         }
+
+        // TODO: just skip over tile, no meld attempt (e.g., remove 1, search, backtrack)
     }
 
     private static void TryPartialSequence(
