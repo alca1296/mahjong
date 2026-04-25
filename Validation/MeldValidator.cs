@@ -66,6 +66,35 @@ public partial class MeldValidator
     // can the player steal this / can the player form a meld from this + stuff in their hand?
     public static bool CanSteal(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
     {
-        throw new NotImplementedException("not implemented yet");
+        // triplet
+        int count = hand.ConcealedTiles.Count(t => t.Equals(discard));
+        if (count >= 2)
+            return true;
+
+        // sequence
+        if (isNextPlayer && discard is Suited s)
+        {
+            var numbers = hand
+                .ConcealedTiles
+                .OfType<Suited>()
+                .Where(t => t.Suit == s.Suit)
+                .Select(t => t.Number)
+                .ToHashSet();
+
+            // check sequence possibilities
+            // (x-2, x-1, x)
+            if (numbers.Contains(s.Number - 1) && numbers.Contains(s.Number - 2))
+                return true;
+
+            // (x-1, x, x+1)
+            if (numbers.Contains(s.Number - 1) && numbers.Contains(s.Number + 1))
+                return true;
+
+            // (x, x+1, x+2)
+            if (numbers.Contains(s.Number + 1) && numbers.Contains(s.Number + 2))
+                return true;
+        }
+
+        return false;
     }
 }
