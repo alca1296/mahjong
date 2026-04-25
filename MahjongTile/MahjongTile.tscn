@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cprhrsyo1c4yb"]
 
-[ext_resource type="Theme" uid="uid://urkms4yhd17c" path="res://MahjongTileTheme.tres" id="1_2nfmx"]
-[ext_resource type="Script" uid="uid://ltfc2c0j6slu" path="res://MahjongTile.cs" id="2_tcin4"]
+[ext_resource type="Theme" uid="uid://urkms4yhd17c" path="res://MahjongTile/MahjongTileTheme.tres" id="1_2nfmx"]
+[ext_resource type="Script" uid="uid://ltfc2c0j6slu" path="res://MahjongTile/MahjongTile.cs" id="2_tcin4"]
 
 [node name="PanelContainer" type="PanelContainer" unique_id=1577852728]
 offset_right = 40.0

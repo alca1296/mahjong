@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Mahjong;
 
 public enum DrawOrSteal { Draw, Steal }
