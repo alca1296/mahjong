@@ -25,6 +25,7 @@
     <Compile Include="../MahjongTile/MahjongTileData.cs"/>
     <Compile Include="../TileHand/TileHandData.cs"/>
     <Compile Include="../Validation/MeldValidator.cs"/>
+    <Compile Include="../Validation/HandSolver.cs"/>
   </ItemGroup>
 
 </Project>
