@@ -23,3 +23,14 @@ public class Player
 
     public MahjongTileRecord DecideDiscard() => _decisionMaker.DecideDiscard(Hand);
 }
+
+public class PlayerFactory
+{
+    public static Player createGreedyBot() {
+        return new Player(DecisionMakerFactory.newGreedyBotStrategy());
+    }
+
+    public static Player createDumbBot() {
+        return new Player(DecisionMakerFactory.newDumbBotStrategy());
+    }
+}

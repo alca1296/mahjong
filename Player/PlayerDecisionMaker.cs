@@ -160,3 +160,14 @@ public partial class DumbBot : IPlayerDecisionMaker
         return hand.ConcealedTiles[randomIndex];
     }
 }
+
+public class DecisionMakerFactory
+{
+    public IPlayerDecisionMaker newGreedyBotStrategy() {
+        return new GreedyBot();
+    }
+
+    public IPlayerDecisionMaker newDumbBotStrategy() {
+        return new DumbBot();
+    }
+}
