@@ -140,12 +140,19 @@ public partial class HandSolver
     private static readonly int PartialMeldScore = 1;
     private static readonly int PairScore = 1;
 
-    public static int ScoreConcealedTiles(IReadOnlyList<MahjongTileRecord> tiles, )
+    public static int ScoreConcealedTiles(IReadOnlyList<MahjongTileRecord> tiles)
     {
+        /*
+        same idea as the hand validator. do a DFS over all decompositions 
+        of this hand into complete melds, partial melds, and pairs.
+        hand is scored by: 2 * complete meld count + 1 * partial meld count + pair bonus.
+        an AI player can enumerate over all its discard decisions and pick the tile that maximizes this score (places it closer to melds).
+        an AI player can also see if a potential steal increases this score or not, and steal if it does.
+        */
         var counts = TileListToCounts(tiles);
 
         // no pair
-        int best = BestPartialScore(counts, meldsNeeded);
+        int bestScore = BestPartialScore(counts, meldsNeeded);
 
         foreach (var (tile, count) in counts.ToList())
         {
@@ -153,9 +160,11 @@ public partial class HandSolver
             counts[tile] -= 2;
             // +1 for 
             int candidate = BestPartialScore(counts, meldsNeeded) + PairScore;
-            best = System.Math.Max(best, candidate);
+            bestScore = System.Math.Max(best, candidate);
             counts[tile] += 2;
         }
+
+        return bestScore;
     }
 
     private static int BestPartialScore(
@@ -165,7 +174,7 @@ public partial class HandSolver
         int bestCompleteCount = 0; // complete melds
         int bestPartialCount = 0; // partial melds
         BestPartialScoreSearch(counts, meldsNeeded, 0, 0, ref bestCompleteCount, ref bestPartialCount);
-        return CompleteMeldScore * bestCompleteCount + PartialMeldScore bestPartialCount;
+        return CompleteMeldScore * bestCompleteCount + PartialMeldScore * bestPartialCount;
     }
 
     private static int BestPartialScoreSearch(
@@ -219,7 +228,7 @@ public partial class HandSolver
                 counts[t2]--; 
                 counts[t3]--;
                 
-                BestPartialScoreSearch(counts, meldsNeeded, complete + 1, partial, ref bestComplete, ref bestPartial);
+                BestPartialScoreSearch(counts, meldsNeeded, complete Count+ 1, partialCount, ref bestCompleteCount, ref bestPartialCount);
 
                 counts[tile]++; 
                 counts[t2]++; 
