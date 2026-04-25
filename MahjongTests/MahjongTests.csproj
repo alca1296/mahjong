@@ -26,6 +26,7 @@
     <Compile Include="../TileHand/TileHandData.cs"/>
     <Compile Include="../Validation/MeldValidator.cs"/>
     <Compile Include="../Validation/HandSolver.cs"/>
+    <Compile Include="../Player/PlayerDecisionMaker.cs"/>
   </ItemGroup>
 
 </Project>

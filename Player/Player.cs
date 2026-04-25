@@ -19,7 +19,7 @@ public class Player
     public void ReceiveTile(MahjongTileRecord tile) => _hand.AddConcealed(tile);
     public bool Discard(MahjongTileRecord tile) => _hand.Discard(tile);
 
-    public StealOrPass DecideStealOrPass(MahjongTileRecord lastDiscard) => _decisionMaker.DecideStealOrPass(Hand, lastDiscard);
+    public StealDecision DecideStealOrPass(MahjongTileRecord lastDiscard, bool isNextPlayer) => _decisionMaker.DecideStealOrPass(Hand, lastDiscard, isNextPlayer);
 
     public MahjongTileRecord DecideDiscard() => _decisionMaker.DecideDiscard(Hand);
 }

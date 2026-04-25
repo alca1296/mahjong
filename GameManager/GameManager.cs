@@ -81,7 +81,7 @@ public partial class GameManager
 
             bool isNext = (i == 1);
 
-            if (player.DecideStealOrPass(lastDiscard) == StealOrPass.Steal && 
+            if (player.DecideStealOrPass(lastDiscard, isNext) is Steal && 
                 MeldValidator.CanSteal(player.Hand, lastDiscard, isNext))
             {
                 // give tile
