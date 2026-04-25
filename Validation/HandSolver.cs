@@ -136,9 +136,9 @@ public partial class HandSolver
     }
 
     // heuristic partial solver
-    private static readonly int CompleteMeldScore = 2;
-    private static readonly int PartialMeldScore = 1;
-    private static readonly int PairScore = 1;
+    public static readonly int CompleteMeldScore = 4;
+    public static readonly int PairScore = 2;
+    public static readonly int PartialMeldScore = 1;
 
     public static int ScoreConcealedTiles(IReadOnlyList<MahjongTileRecord> tiles, int meldsNeeded)
     {
@@ -254,7 +254,10 @@ public partial class HandSolver
             TryPartialSequence(counts, meldsNeeded, completeCount, partialCount, tile, new Suited(s2.Suit, s2.Number + 2), ref bestCompleteCount, ref bestPartialCount);
         }
 
-        // TODO: just skip over tile, no meld attempt (e.g., remove 1, search, backtrack)
+        // ignore tile
+        counts[tile]--;
+        BestPartialScoreSearch(counts, meldsNeeded, completeCount, partialCount, ref bestCompleteCount, ref bestPartialCount);
+        counts[tile]++; // backtrack
     }
 
     private static void TryPartialSequence(
