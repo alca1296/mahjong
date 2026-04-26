@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 
 namespace Mahjong;
 
+public abstract record GameState;
+public record GameOngoing() : GameState;
+public record DeckEmpty() : GameState;
+public record Winner(Player player, List<Meld> winningHand) : GameState;
+
 public partial class GameManager : Node2D
 {
 	[Export] public PackedScene TileHandScene;
@@ -95,15 +100,20 @@ public partial class GameManager : Node2D
 	public MahjongTileRecord? LastDiscard => _discardPile.End;
 	public int? LastDiscardPlayerIndex => _lastDiscardPlayerIndex >= 0 ? _lastDiscardPlayerIndex : null;
 
-	public void PlayTurn()
+	public GameState PlayTurn()
 	{
+		if (_deck.Empty()) return new DeckEmpty();
+
 		var player = _players[_currentPlayerIndex];
 		var lastDiscard = LastDiscard;
 
 		if (!_skipDrawThisTurn)
 		{
-			// TODO: deck runs out
 			MahjongTileRecord acquiredTile = _deck.Draw();
+			if (acquiredTile == null) {
+				return new DeckEmpty();
+			}
+
 			player.ReceiveTile(acquiredTile);
 			GD.Print("got a tile");
 		}
@@ -116,8 +126,7 @@ public partial class GameManager : Node2D
 		var winningHand = HandSolver.FindWinningHand(player.Hand);
 		if (winningHand != null)
 		{
-			// HANDLE WIN
-			return;
+			return new Winner(player, winningHand);
 		}
 
 		var discard = player.DecideDiscard();
@@ -127,20 +136,53 @@ public partial class GameManager : Node2D
 		_lastDiscardPlayerIndex = _currentPlayerIndex;
 
 		if (ResolveSteals(discard))
-			return; // turn already reassigned
+			// turn already reassigned
+			return new GameOngoing();
 
 		AdvanceTurn();
-	}
-
-	private bool IsNextPlayer()
-	{
-		return LastDiscardPlayerIndex.HasValue &&
-			(_lastDiscardPlayerIndex + 1) % _players.Length == _currentPlayerIndex;
+		return new GameOngoing();
 	}
 
 	private void AdvanceTurn()
 	{
 		_currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Length;
+	}
+
+	// atomic meld commit, should either succeed or fail 
+	private bool TryCommitMeld(TileHandData hand, Meld meld, MahjongTileRecord discard, bool isNextPlayer)
+	{
+		if (!MeldValidator.CanSteal(hand, discard, isNextPlayer)) {
+			return false;
+		}
+
+		// will take first matching instance
+		var tiles = meld.Tiles.ToList();
+		if (!tiles.Remove(discard)) {
+			return false; // discarded tile missing from the meld for some reason
+		}
+
+		// remove other 2 from hand
+		var rollback = new List<MahjongTileRecord>();
+		bool needsRollback = false;
+
+		foreach (var tile in tiles) {
+			if (!hand.Discard(tile)) {
+				needsRollback = true;
+				break;
+			} else {
+				rollback.Add(tile);
+			}
+		}
+
+		if (needsRollback) {
+			foreach (var tile in rollback) {
+				hand.AddConcealed(tile);
+			}
+			return false;
+		}
+
+		hand.AddMeld(meld);
+		return true;
 	}
 
 	private bool ResolveSteals(MahjongTileRecord lastDiscard)
@@ -152,11 +194,10 @@ public partial class GameManager : Node2D
 
 			bool isNext = (i == 1);
 
-			if (player.DecideStealOrPass(lastDiscard, isNext) is Steal &&
-				MeldValidator.CanSteal(player.Hand, lastDiscard, isNext))
+			if (player.DecideStealOrPass(lastDiscard, isNext) is Steal steal)
 			{
 				// give tile
-				player.ReceiveTile(_discardPile.TakeEnd());
+				if (!TryCommitMeld(player.Hand, steal.Meld, lastDiscard, isNext)) continue;
 
 				// next turn starts with stealing player
 				_currentPlayerIndex = idx;
