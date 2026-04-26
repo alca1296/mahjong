@@ -99,11 +99,7 @@ public partial class GameManager : Control
 		{
 			var state = await PlayTurn();
 			RefreshVisuals();
-
-			// Pause here for 3 seconds without freezing the game
-			await Task.Delay(100);
-
-			GD.Print("3 seconds passed, next turn!");
+			await Task.Delay(1000);
 
 			if (state is Winner winner)
 			{

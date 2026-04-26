@@ -14,7 +14,6 @@ public partial class TitleScreen : Control
 	{
 		var gameManager = GameScene.Instantiate<GameManager>();
 
-		// 2. Prepare your Mahjong data
 		var fullDeck = new Deck(TileFactory.CreateFullSet());
 		var players = new List<Player>();
 		players.Add(PlayerFactory.createHumanPlayer());
@@ -22,14 +21,10 @@ public partial class TitleScreen : Control
 		players.Add(PlayerFactory.createDumbBot());
 		players.Add(PlayerFactory.createGreedyBot());
 
-		// 3. Inject the data BEFORE adding to the tree
 		gameManager.Init(players.ToArray(), fullDeck);
 
-		// 4. Switch scenes
 		GetTree().Root.AddChild(gameManager);
 		GetTree().CurrentScene = gameManager;
-
-		// 5. Remove the menu
 		QueueFree();
 	}
 
