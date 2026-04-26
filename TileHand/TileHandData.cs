@@ -24,6 +24,8 @@ public class TileCollection
     public int Count(MahjongTileRecord tile) => _tiles.Count(t => t == tile);
     public bool Contains(MahjongTileRecord tile) => _tiles.Contains(tile);
 
+    public bool Empty() => _tiles.Count() == 0;
+
     // can maybe extend to check for possible triplets/sequences/etc.
 }
 
@@ -46,7 +48,7 @@ public class TileHandData
             : "No Tiles";
 
         string melds = _melds.Count > 0
-            ? string.Join(" ", _melds.Select(m => $"({m})"))
+            ? string.Join(" ", _melds.Select(m => $"({string.Join(" ", m.Tiles)})"))
             : "No Melds";
 
         return $"Hand: {concealed} | Melds: {melds}";
