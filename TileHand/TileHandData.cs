@@ -48,7 +48,7 @@ public class TileHandData
             : "No Tiles";
 
         string melds = _melds.Count > 0
-            ? string.Join(" ", _melds.Select(m => $"({m})"))
+            ? string.Join(" ", _melds.Select(m => $"({string.Join(" ", m.Tiles)})"))
             : "No Melds";
 
         return $"Hand: {concealed} | Melds: {melds}";
