@@ -36,3 +36,9 @@ There is a GameManager that is responsible for controlling and handling all game
 ### Meaningful Test Cases
 We are implementing unit tests using the `xUnit.net` framework for C#. 
 All unit tests are implemented under [MahjongTests](MahjongTests/) in corresponding `*Tests.cs` files. Many of the core game logic classes are verified with test cases: game logic like validating melds is checked, the player strategies are verified under example turns to make logically consistent decisions, data structures like the tile hand are tested to check consistency, and the central win checking algorithm (a complex, recursive DFS) is checked, among other features/classes. To test, you have to cd into the tests directory and run `dotnet test`. 
+
+### AI Disclosure
+We used AI to help debug errors and help with development of UI elements.
+
+### Attribution
+We got our tile images from [this repository](https://github.com/FluffyStuff/riichi-mahjong-tiles).
