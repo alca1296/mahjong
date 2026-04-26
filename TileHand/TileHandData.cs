@@ -23,6 +23,8 @@ public class TileCollection
     
     public int Count(MahjongTileRecord tile) => _tiles.Count(t => t == tile);
     public bool Contains(MahjongTileRecord tile) => _tiles.Contains(tile);
+
+    public bool Empty() => _tiles.Count() == 0;
     
     // can maybe extend to check for possible triplets/sequences/etc.
 }

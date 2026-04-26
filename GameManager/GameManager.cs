@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace Mahjong;
 
+public abstract record GameState;
+public record GameOngoing() : GameState;
+public record DeckEmpty() : GameState;
+public record Winner(Player player, List<Meld> completeHand) : GameState;
+
 public partial class GameManager
 {
     private readonly Player[] _players;
@@ -25,15 +30,23 @@ public partial class GameManager
     public MahjongTileRecord? LastDiscard => _discardPile.End;
     public int? LastDiscardPlayerIndex => _lastDiscardPlayerIndex >= 0 ? _lastDiscardPlayerIndex : null;
 
-    public void PlayTurn()
+    public GameState PlayTurn()
     {
+        // if deck is empty, do nothing
+        if (_deck.Empty()) return new DeckEmpty();
+
         var player = _players[_currentPlayerIndex];
         var lastDiscard = LastDiscard;
 
         if (!_skipDrawThisTurn) 
         {
-            // TODO: deck runs out
             MahjongTileRecord acquiredTile = _deck.Draw();
+
+            if (acquiredTile == null) {
+                // game over
+                return new DeckEmpty();
+            }
+
             player.ReceiveTile(acquiredTile);
         }
         else
@@ -45,8 +58,7 @@ public partial class GameManager
         var winningHand = HandSolver.FindWinningHand(player.Hand);
         if (winningHand != null)
         {
-            // HANDLE WIN
-            return;
+            return new Winner(player, winningHand);
         }
 
         var discard = player.DecideDiscard();
@@ -56,15 +68,10 @@ public partial class GameManager
         _lastDiscardPlayerIndex = _currentPlayerIndex;
 
         if (ResolveSteals(discard))
-            return; // turn already reassigned
+            return new GameOngoing(); // turn already reassigned
 
         AdvanceTurn();
-    }
-
-    private bool IsNextPlayer()
-    {
-        return LastDiscardPlayerIndex.HasValue && 
-            (_lastDiscardPlayerIndex + 1) % _players.Length == _currentPlayerIndex;
+        return new GameOngoing();
     }
 
     private void AdvanceTurn()
@@ -81,11 +88,11 @@ public partial class GameManager
 
             bool isNext = (i == 1);
 
-            if (player.DecideStealOrPass(lastDiscard, isNext) is Steal && 
+            if (player.DecideStealOrPass(lastDiscard, isNext) is Steal s && 
                 MeldValidator.CanSteal(player.Hand, lastDiscard, isNext))
             {
-                // give tile
-                player.ReceiveTile(_discardPile.TakeEnd());
+                // take meld!
+                
                 
                 // next turn starts with stealing player
                 _currentPlayerIndex = idx;
