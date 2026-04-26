@@ -97,7 +97,7 @@ public partial class GameManager : Control
 	{
 		while (true)
 		{
-			var state = PlayTurn();
+			var state = await PlayTurn();
 			RefreshVisuals();
 
 			// Pause here for 3 seconds without freezing the game
@@ -105,23 +105,28 @@ public partial class GameManager : Control
 
 			GD.Print("3 seconds passed, next turn!");
 
-			if (state is Winner winner) {
+			if (state is Winner winner)
+			{
 				GD.Print("Winner!");
-				foreach (var meld in winner.winningHand) {
-					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");	
+				foreach (var meld in winner.winningHand)
+				{
+					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
 				}
 
 				_overlay.ShowWin(winner.id);
 				break;
-			} else if (state is DeckEmpty) {
+			}
+			else if (state is DeckEmpty)
+			{
 				GD.Print("Deck empty!");
-				
+
 				_overlay.ShowWin(-1);
 				break;
 			}
 		}
 
-		foreach (var hand in _handVisuals) {
+		foreach (var hand in _handVisuals)
+		{
 			hand.Hidden = false;
 		}
 
@@ -132,12 +137,18 @@ public partial class GameManager : Control
 	{
 	}
 
+	public void NotifyTileClicked(MahjongTileRecord tile)
+	{
+		var human = _players[0];
+		human.notifyTileClicked(tile);
+	}
+
 	// getters that will probably be useful for the GUI
 	public IReadOnlyList<Player> Players => _players;
 	public MahjongTileRecord? LastDiscard => _discardPile.End;
 	public int? LastDiscardPlayerIndex => _lastDiscardPlayerIndex >= 0 ? _lastDiscardPlayerIndex : null;
 
-	public GameState PlayTurn()
+	public async Task<GameState> PlayTurn()
 	{
 		if (_deck.Empty()) return new DeckEmpty();
 
@@ -147,7 +158,8 @@ public partial class GameManager : Control
 		if (!_skipDrawThisTurn)
 		{
 			MahjongTileRecord acquiredTile = _deck.Draw();
-			if (acquiredTile == null) {
+			if (acquiredTile == null)
+			{
 				return new DeckEmpty();
 			}
 
@@ -167,12 +179,12 @@ public partial class GameManager : Control
 		}
 
 		var discard = player.DecideDiscard();
-		player.Discard(discard); // TODO: check return value
+		player.Discard(await discard); // TODO: check return value
 
-		_discardPile.Add(discard);
+		_discardPile.Add(await discard);
 		_lastDiscardPlayerIndex = _currentPlayerIndex;
 
-		if (ResolveSteals(discard))
+		if (await ResolveSteals(await discard))
 			// turn already reassigned
 			return new GameOngoing();
 
@@ -185,16 +197,18 @@ public partial class GameManager : Control
 		_currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Length;
 	}
 
-	// atomic meld commit, should either succeed or fail 
+	// atomic meld commit, should either succeed or fail
 	private bool TryCommitMeld(TileHandData hand, Meld meld, MahjongTileRecord discard, bool isNextPlayer)
 	{
-		if (!MeldValidator.CanSteal(hand, discard, isNextPlayer)) {
+		if (!MeldValidator.CanSteal(hand, discard, isNextPlayer))
+		{
 			return false;
 		}
 
 		// will take first matching instance
 		var tiles = meld.Tiles.ToList();
-		if (!tiles.Remove(discard)) {
+		if (!tiles.Remove(discard))
+		{
 			return false; // discarded tile missing from the meld for some reason
 		}
 
@@ -202,17 +216,23 @@ public partial class GameManager : Control
 		var rollback = new List<MahjongTileRecord>();
 		bool needsRollback = false;
 
-		foreach (var tile in tiles) {
-			if (!hand.Discard(tile)) {
+		foreach (var tile in tiles)
+		{
+			if (!hand.Discard(tile))
+			{
 				needsRollback = true;
 				break;
-			} else {
+			}
+			else
+			{
 				rollback.Add(tile);
 			}
 		}
 
-		if (needsRollback) {
-			foreach (var tile in rollback) {
+		if (needsRollback)
+		{
+			foreach (var tile in rollback)
+			{
 				hand.AddConcealed(tile);
 			}
 			return false;
@@ -222,7 +242,7 @@ public partial class GameManager : Control
 		return true;
 	}
 
-	private bool ResolveSteals(MahjongTileRecord lastDiscard)
+	private async Task<bool> ResolveSteals(MahjongTileRecord lastDiscard)
 	{
 		for (int i = 1; i < _players.Length; i++)
 		{
@@ -231,7 +251,7 @@ public partial class GameManager : Control
 
 			bool isNext = (i == 1);
 
-			if (player.DecideStealOrPass(lastDiscard, isNext) is Steal steal)
+			if (await player.DecideStealOrPass(lastDiscard, isNext) is Steal steal)
 			{
 				// give tile
 				if (!TryCommitMeld(player.Hand, steal.Meld, lastDiscard, isNext)) continue;

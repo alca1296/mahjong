@@ -17,9 +17,9 @@ public partial class TitleScreen : Control
 		// 2. Prepare your Mahjong data
 		var fullDeck = new Deck(TileFactory.CreateFullSet());
 		var players = new List<Player>();
-		players.Add(PlayerFactory.createDumbBot());
-		players.Add(PlayerFactory.createDumbBot());
+		players.Add(PlayerFactory.createHumanPlayer());
 		players.Add(PlayerFactory.createGreedyBot());
+		players.Add(PlayerFactory.createDumbBot());
 		players.Add(PlayerFactory.createGreedyBot());
 
 		// 3. Inject the data BEFORE adding to the tree

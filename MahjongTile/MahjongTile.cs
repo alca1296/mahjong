@@ -49,6 +49,7 @@ public partial class MahjongTile : PanelContainer
 		{
 			label.Text = "No tile value set.";
 		}
+
 		else if (!Hidden)
 		{
 			if (_tile is Suited s && s.Suit == Suit.Character) {
@@ -56,6 +57,30 @@ public partial class MahjongTile : PanelContainer
 			}
 
 			icon.Texture = TileTextureLibrary.Instance.Get(_tile);
+		}
+	}
+
+	public override void _GuiInput(InputEvent @event)
+	{
+		if (@event is InputEventMouseButton mouseEvent)
+		{
+			if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			{
+				HandleTileClicked();
+				AcceptEvent();
+			}
+		}
+	}
+
+	private void HandleTileClicked()
+	{
+		var gameScene = GetTree().CurrentScene as GameManager;
+
+		if (gameScene != null)
+		{
+			gameScene.NotifyTileClicked(_tile);
+			GD.Print($"Clicked: {_tile}");
+
 		}
 	}
 }

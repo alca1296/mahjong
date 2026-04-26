@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Mahjong;
 
@@ -19,18 +20,30 @@ public class Player
 	public void ReceiveTile(MahjongTileRecord tile) => _hand.AddConcealed(tile);
 	public bool Discard(MahjongTileRecord tile) => _hand.Discard(tile);
 
-	public StealDecision DecideStealOrPass(MahjongTileRecord lastDiscard, bool isNextPlayer) => _decisionMaker.DecideStealOrPass(Hand, lastDiscard, isNextPlayer);
+	public async Task<StealDecision> DecideStealOrPass(MahjongTileRecord lastDiscard, bool isNextPlayer) => await _decisionMaker.DecideStealOrPass(Hand, lastDiscard, isNextPlayer);
 
-	public MahjongTileRecord DecideDiscard() => _decisionMaker.DecideDiscard(Hand);
+	public Task<MahjongTileRecord> DecideDiscard() => _decisionMaker.DecideDiscard(Hand);
+
+	public void notifyTileClicked(MahjongTileRecord tile)
+	{
+		_decisionMaker.NotifyTileClicked(tile);
+	}
 }
 
 public class PlayerFactory
 {
-	public static Player createGreedyBot() {
+	public static Player createGreedyBot()
+	{
 		return new Player(DecisionMakerFactory.newGreedyBotStrategy());
 	}
 
-	public static Player createDumbBot() {
+	public static Player createDumbBot()
+	{
 		return new Player(DecisionMakerFactory.newDumbBotStrategy());
+	}
+
+	public static Player createHumanPlayer()
+	{
+		return new Player(DecisionMakerFactory.newHumanPlayerStrategy());
 	}
 }

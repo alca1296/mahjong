@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Godot;
 
 namespace Mahjong;
 
@@ -11,8 +13,34 @@ public record Steal(Meld Meld) : StealDecision;
 // decision maker can probably request illegal moves, the game manager should block them
 public interface IPlayerDecisionMaker
 {
-	public abstract StealDecision DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer);
-	public abstract MahjongTileRecord DecideDiscard(TileHandData hand);
+	public abstract Task<StealDecision> DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer);
+	public abstract Task<MahjongTileRecord> DecideDiscard(TileHandData hand);
+	public void NotifyTileClicked(MahjongTileRecord tile) { }
+}
+
+public partial class HumanPlayer : Node, IPlayerDecisionMaker
+{
+	private TaskCompletionSource<MahjongTileRecord> _discardTcs;
+
+
+	public async Task<StealDecision> DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
+	{
+		//human always passes
+		return new Pass();
+	}
+
+	public async Task<MahjongTileRecord> DecideDiscard(TileHandData hand)
+	{
+		_discardTcs = new TaskCompletionSource<MahjongTileRecord>();
+		var discardedTile = await _discardTcs.Task;
+		return discardedTile;
+	}
+
+	public void NotifyTileClicked(MahjongTileRecord tile)
+	{
+		GD.Print("got the message");
+		_discardTcs?.TrySetResult(tile);
+	}
 }
 
 public partial class GreedyBot : IPlayerDecisionMaker
@@ -66,7 +94,7 @@ public partial class GreedyBot : IPlayerDecisionMaker
 		return results;
 	}
 
-	public StealDecision DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
+	public async Task<StealDecision> DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
 	{
 		// check if this steal improves score heuristic, and submit a steal request if so.
 		// the manager will validate the steal and block it if the tile would only contribute to a partial meld
@@ -122,7 +150,7 @@ public partial class GreedyBot : IPlayerDecisionMaker
 		return bestMeld != null ? new Steal(bestMeld) : new Pass();
 	}
 
-	public MahjongTileRecord DecideDiscard(TileHandData hand)
+	public async Task<MahjongTileRecord> DecideDiscard(TileHandData hand)
 	{
 		var concealed = hand.ConcealedTiles;
 		int meldsNeeded = 4 - hand.Melds.Count(m => m.Type != MeldType.Pair);
@@ -149,12 +177,12 @@ public partial class GreedyBot : IPlayerDecisionMaker
 
 public partial class DumbBot : IPlayerDecisionMaker
 {
-	public StealDecision DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
+	public async Task<StealDecision> DecideStealOrPass(TileHandData hand, MahjongTileRecord discard, bool isNextPlayer)
 	{
 		return new Pass();
 	}
 
-	public MahjongTileRecord DecideDiscard(TileHandData hand)
+	public async Task<MahjongTileRecord> DecideDiscard(TileHandData hand)
 	{
 		int randomIndex = Random.Shared.Next(hand.ConcealedTiles.Count);
 		return hand.ConcealedTiles[randomIndex];
@@ -171,5 +199,9 @@ public class DecisionMakerFactory
 	public static IPlayerDecisionMaker newDumbBotStrategy()
 	{
 		return new DumbBot();
+	}
+	public static IPlayerDecisionMaker newHumanPlayerStrategy()
+	{
+		return new HumanPlayer();
 	}
 }
