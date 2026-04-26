@@ -24,6 +24,17 @@ public partial class GameManager : Node2D
 	{
 		_players = players;
 		_deck = deck;
+
+		foreach (var player in _players)
+		{
+			for (int i = 0; i < 13; i++)
+			{
+				var tile = _deck.Draw();
+
+				if (tile != null)
+					player.ReceiveTile(tile);
+			}
+		}
 	}
 
 	public override void _Ready()
