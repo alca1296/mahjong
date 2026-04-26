@@ -90,13 +90,25 @@ public partial class GameManager : Control
 	{
 		while (true)
 		{
-			PlayTurn();
+			var state = PlayTurn();
 			RefreshVisuals();
 
 			// Pause here for 3 seconds without freezing the game
-			await Task.Delay(3000);
+			await Task.Delay(100);
 
 			GD.Print("3 seconds passed, next turn!");
+
+			if (state is Winner winner) {
+				GD.Print("Winner!");
+				foreach (var meld in winner.winningHand) {
+					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");	
+				}
+
+				foreach (var meld in winner.player.Hand.Melds) {
+					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
+				}
+				break;
+			}
 		}
 	}
 
@@ -207,6 +219,7 @@ public partial class GameManager : Control
 			{
 				// give tile
 				if (!TryCommitMeld(player.Hand, steal.Meld, lastDiscard, isNext)) continue;
+				_discardPile.TakeEnd();
 
 				// next turn starts with stealing player
 				_currentPlayerIndex = idx;

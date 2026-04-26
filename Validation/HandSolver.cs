@@ -15,85 +15,28 @@ public partial class HandSolver
         }
         return dict;
     }
-    
-    private static bool CanFormMelds(
-        Dictionary<MahjongTileRecord, int> counts, 
-        List<Meld> result,
-        int meldsNeeded)
-    {
-        /*
-        recursive meld solver. pick first tile you can find with nonzero count in the 
-        counts dictionary. for each meld type, try forming a meld with the chosen tile. 
-        if a meld can be formed, remove that triplet from the counts and recursively 
-        find more melds in whatever remains. so effectively does a full search over meld types
-        to see what works.
-        */
-        
-        // base case
-        int complete = result.Count(m => m.Type != MeldType.Pair);
-        if (complete == meldsNeeded) return true; // don't need more
 
-        // order tiles so we don't pick 8 or 9 for a sequence check
-        // tuples will compare with first member taking priority
-        var tile = counts
-            .Where(pair => pair.Value > 0)
-            .OrderBy(pair => pair.Key switch {
+    private static Dictionary<MahjongTileRecord, int> CloneCounts(
+        Dictionary<MahjongTileRecord, int> counts)
+    {
+        return counts.ToDictionary(kv => kv.Key, kv => kv.Value);
+    }
+
+    private static MahjongTileRecord? GetFirstAvailableTile(
+        Dictionary<MahjongTileRecord, int> counts)
+    {
+        return counts
+            .Where(kv => kv.Value > 0)
+            .Select(kv => kv.Key)
+            .OrderBy(tile => tile switch {
                 Suited s => (0, (int) s.Suit * 10 + s.Number),
                 Wind w => (1, (int) w.Direction),
                 Dragon d => (2, (int) d.Color),
                 _ => (3, 0) // catch all
             })
-            .First().Key;
-
-        // try triplet
-        if (counts[tile] >= 3)
-        {
-            counts[tile] -= 3;
-
-            result.Add(new Meld(
-                MeldType.Triplet,
-                new List<MahjongTileRecord> { tile, tile, tile }
-            ));
-
-            if (CanFormMelds(counts, result, meldsNeeded))
-                return true;
-
-            result.RemoveAt(result.Count - 1);
-            counts[tile] += 3;
-        }
-
-        // try sequence
-        if (tile is Suited s && s.Number <= 7)
-        {
-            var t2 = new Suited(s.Suit, s.Number + 1);
-            var t3 = new Suited(s.Suit, s.Number + 2);
-
-            if (counts.TryGetValue(t2, out var c2) && c2 > 0 &&
-                counts.TryGetValue(t3, out var c3) && c3 > 0)
-            {
-                counts[tile]--;
-                counts[t2]--;
-                counts[t3]--;
-
-                result.Add(new Meld(
-                    MeldType.Sequence,
-                    new List<MahjongTileRecord> { tile, t2, t3 }
-                ));
-
-                if (CanFormMelds(counts, result, meldsNeeded))
-                    return true;
-
-                result.RemoveAt(result.Count - 1);
-
-                counts[tile]++;
-                counts[t2]++;
-                counts[t3]++;
-            }
-        }
-
-        return false;
+            .FirstOrDefault();
     }
-    
+
     // see if the current hand wins, either before or after a draw
     // return a solution if the hand wins
     public static List<Meld>? FindWinningHand(TileHandData hand) 
@@ -101,39 +44,205 @@ public partial class HandSolver
         return FindWinningHand(hand.ConcealedTiles, hand.Melds);
     }
 
-    public static List<Meld>? FindWinningHand(IReadOnlyList<MahjongTileRecord> concealed, IReadOnlyList<Meld> melds)
+    public static List<Meld>? FindWinningHand(
+    IReadOnlyList<MahjongTileRecord> concealed,
+    IReadOnlyList<Meld> existingMelds)
+{
+    int meldsNeeded = 4 - existingMelds.Count(m => m.Type != MeldType.Pair);
+
+    var counts = TileListToCounts(concealed);
+
+    foreach (var (tile, count) in counts.ToList())
     {
-        int meldsNeeded = 4 - melds.Count(m => m.Type != MeldType.Pair);
+        if (count < 2) continue;
 
-        // concealed should be 14 - 3 * revealed, if we just drew a tile
-        // or 13 - 3 * revealed, if waiting for turn
-        // winning requires needed*3 + 2 concealed tiles
-        if (concealed.Count != meldsNeeded*3 + 2) return null;
-        
-        // convert to dictionary of counts of all tile types
-        var counts = TileListToCounts(concealed);
-        
-        foreach (var (tile, count) in counts.ToList())
+        var countsCopy = CloneCounts(counts);
+        countsCopy[tile] -= 2;
+
+        var solution = new List<Meld>(existingMelds)
         {
-            if (count < 2) continue;
+            new Meld(MeldType.Pair, new List<MahjongTileRecord> { tile, tile })
+        };
 
-            // try using this as the pair
-            counts[tile] -= 2; // remove from the list
-            
-            var solution = melds.ToList();
-            solution.Add(new Meld(
-                MeldType.Pair, 
-                new List<MahjongTileRecord>{ tile, tile }
-            ));
-            
-            if (CanFormMelds(counts, solution, meldsNeeded))
-                return solution;
-            
-            counts[tile] += 2; // backtrack if the pair doesn't work
-        }
-        
-        return null;
+        if (TryFormMelds(countsCopy, meldsNeeded, solution))
+            return solution;
     }
+
+    return null;
+}
+
+private static bool TryFormMelds(
+    Dictionary<MahjongTileRecord, int> counts,
+    int meldsRemaining,
+    List<Meld> solution)
+{
+    if (meldsRemaining == 0)
+        return true;
+
+    var tile = GetFirstAvailableTile(counts);
+    if (tile == null)
+        return false;
+
+    // ─────────────────────────────
+    // 1. Try triplet
+    // ─────────────────────────────
+    if (counts[tile] >= 3)
+    {
+        var nextCounts = CloneCounts(counts);
+        nextCounts[tile] -= 3;
+
+        var nextSolution = new List<Meld>(solution)
+        {
+            new Meld(MeldType.Triplet, new List<MahjongTileRecord> { tile, tile, tile })
+        };
+
+        if (TryFormMelds(nextCounts, meldsRemaining - 1, nextSolution))
+            return true;
+    }
+
+    // ─────────────────────────────
+    // 2. Try sequence (only suited tiles)
+    // ─────────────────────────────
+    if (tile is Suited s)
+    {
+        var t2 = new Suited(s.Suit, s.Number + 1);
+        var t3 = new Suited(s.Suit, s.Number + 2);
+
+        if (counts.GetValueOrDefault(t2) > 0 &&
+            counts.GetValueOrDefault(t3) > 0)
+        {
+            var nextCounts = CloneCounts(counts);
+            nextCounts[tile]--;
+            nextCounts[t2]--;
+            nextCounts[t3]--;
+
+            var nextSolution = new List<Meld>(solution)
+            {
+                new Meld(
+                    MeldType.Sequence,
+                    new List<MahjongTileRecord> { tile, t2, t3 }
+                )
+            };
+
+            if (TryFormMelds(nextCounts, meldsRemaining - 1, nextSolution))
+                return true;
+        }
+    }
+
+    return false;
+}
+    
+    // private static bool CanFormMelds(
+    //     Dictionary<MahjongTileRecord, int> counts, 
+    //     List<Meld> result,
+    //     int meldsNeeded)
+    // {
+    //     /*
+    //     recursive meld solver. pick first tile you can find with nonzero count in the 
+    //     counts dictionary. for each meld type, try forming a meld with the chosen tile. 
+    //     if a meld can be formed, remove that triplet from the counts and recursively 
+    //     find more melds in whatever remains. so effectively does a full search over meld types
+    //     to see what works.
+    //     */
+        
+    //     // base case
+    //     int complete = result.Count(m => m.Type != MeldType.Pair);
+    //     if (complete == meldsNeeded) return true; // don't need more
+
+    //     // order tiles so we don't pick 8 or 9 for a sequence check
+    //     // tuples will compare with first member taking priority
+    //     var tile = counts
+    //         .Where(pair => pair.Value > 0)
+    //         .OrderBy(pair => pair.Key switch {
+    //             Suited s => (0, (int) s.Suit * 10 + s.Number),
+    //             Wind w => (1, (int) w.Direction),
+    //             Dragon d => (2, (int) d.Color),
+    //             _ => (3, 0) // catch all
+    //         })
+    //         .First().Key;
+
+    //     // try triplet
+    //     if (counts[tile] >= 3)
+    //     {
+    //         counts[tile] -= 3;
+
+    //         result.Add(new Meld(
+    //             MeldType.Triplet,
+    //             new List<MahjongTileRecord> { tile, tile, tile }
+    //         ));
+
+    //         if (CanFormMelds(counts, result, meldsNeeded))
+    //             return true;
+
+    //         result.RemoveAt(result.Count - 1);
+    //         counts[tile] += 3;
+    //     }
+
+    //     // try sequence
+    //     if (tile is Suited s && s.Number <= 7)
+    //     {
+    //         var t2 = new Suited(s.Suit, s.Number + 1);
+    //         var t3 = new Suited(s.Suit, s.Number + 2);
+
+    //         if (counts.TryGetValue(t2, out var c2) && c2 > 0 &&
+    //             counts.TryGetValue(t3, out var c3) && c3 > 0)
+    //         {
+    //             counts[tile]--;
+    //             counts[t2]--;
+    //             counts[t3]--;
+
+    //             result.Add(new Meld(
+    //                 MeldType.Sequence,
+    //                 new List<MahjongTileRecord> { tile, t2, t3 }
+    //             ));
+
+    //             if (CanFormMelds(counts, result, meldsNeeded))
+    //                 return true;
+
+    //             result.RemoveAt(result.Count - 1);
+
+    //             counts[tile]++;
+    //             counts[t2]++;
+    //             counts[t3]++;
+    //         }
+    //     }
+
+    //     return false;
+    // }
+
+    // public static List<Meld>? FindWinningHand(IReadOnlyList<MahjongTileRecord> concealed, IReadOnlyList<Meld> melds)
+    // {
+    //     int meldsNeeded = 4 - melds.Count(m => m.Type != MeldType.Pair);
+
+    //     // concealed should be 14 - 3 * revealed, if we just drew a tile
+    //     // or 13 - 3 * revealed, if waiting for turn
+    //     // winning requires needed*3 + 2 concealed tiles
+    //     if (concealed.Count != meldsNeeded*3 + 2) return null;
+        
+    //     // convert to dictionary of counts of all tile types
+    //     var counts = TileListToCounts(concealed);
+        
+    //     foreach (var (tile, count) in counts.ToList())
+    //     {
+    //         if (count < 2) continue;
+
+    //         // try using this as the pair
+    //         counts[tile] -= 2; // remove from the list
+            
+    //         var solution = melds.ToList();
+    //         solution.Add(new Meld(
+    //             MeldType.Pair, 
+    //             new List<MahjongTileRecord>{ tile, tile }
+    //         ));
+            
+    //         if (CanFormMelds(counts, solution, meldsNeeded))
+    //             return solution;
+            
+    //         counts[tile] += 2; // backtrack if the pair doesn't work
+    //     }
+        
+    //     return null;
+    // }
 
     // heuristic partial solver
     public static readonly int CompleteMeldScore = 4;
