@@ -41,6 +41,7 @@ offset_bottom = 20.0
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -1.5707964
+pivot_offset_ratio = Vector2(0.5, 0.5)
 
 [node name="Anchor2" type="Control" parent="." unique_id=1268343589]
 layout_mode = 1
@@ -52,6 +53,7 @@ offset_right = 20.0
 offset_bottom = 40.0
 grow_horizontal = 2
 rotation = -3.1415927
+pivot_offset_ratio = Vector2(0.5, 0.5)
 
 [node name="Anchor3" type="Control" parent="." unique_id=1848129219]
 layout_mode = 1
@@ -63,6 +65,7 @@ offset_right = 40.0
 offset_bottom = 20.0
 grow_vertical = 2
 rotation = 1.5707964
+pivot_offset_ratio = Vector2(0.5, 0.5)
 
 [node name="AnchorDiscard" type="Control" parent="." unique_id=1454318282]
 layout_mode = 1
