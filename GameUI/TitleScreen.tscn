@@ -14,20 +14,33 @@ script = ExtResource("1_cro3c")
 GameScene = ExtResource("2_xgjfp")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1428087331]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -46.0
+offset_top = -46.5
+offset_right = 46.0
+offset_bottom = 46.5
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Label" type="Label" parent="VBoxContainer" unique_id=1945111716]
 layout_mode = 2
+theme_override_font_sizes/font_size = 48
 text = "Mahjong"
 
 [node name="PlayButton" type="Button" parent="VBoxContainer" unique_id=938057152]
+custom_minimum_size = Vector2(200, 100)
 layout_mode = 2
+theme_override_font_sizes/font_size = 48
 text = "Play"
 
 [node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1342385561]
 layout_mode = 2
+theme_override_font_sizes/font_size = 48
 text = "Quit Game"
 
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonPressed"]
