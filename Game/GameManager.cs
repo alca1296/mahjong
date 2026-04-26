@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace Mahjong;
 
-public partial class GameManager : Node2D
+public partial class GameManager : Control
 {
 	[Export] public PackedScene TileHandScene;
+	[Export] public PackedScene MahjongTileScene;
 
 	private Player[] _players;
 	private Deck _deck;
@@ -19,6 +20,7 @@ public partial class GameManager : Node2D
 	private bool _skipDrawThisTurn = false;
 
 	private List<TileHand> _handVisuals = new();
+	private MahjongTile _discardVisual = new();
 
 	public void Init(Player[] players, Deck deck)
 	{
@@ -58,6 +60,11 @@ public partial class GameManager : Node2D
 			_handVisuals.Add(handUI);
 		}
 
+		var discardAnchor = GetNode<Control>("AnchorDiscard");
+		_discardVisual = MahjongTileScene.Instantiate<MahjongTile>();
+		discardAnchor.AddChild(_discardVisual);
+
+
 		RunGameLoop();
 		RefreshVisuals();
 	}
@@ -68,8 +75,9 @@ public partial class GameManager : Node2D
 		{
 			// Pass the internal data from the Player to the TileHand script
 			_handVisuals[i].Hand = _players[i].Hand;
-			GD.Print("refreshing visuals");
 		}
+
+		_discardVisual.Tile = _discardPile.End;
 	}
 
 	private async void RunGameLoop()

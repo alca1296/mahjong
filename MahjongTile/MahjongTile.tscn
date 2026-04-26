@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://ltfc2c0j6slu" path="res://MahjongTile/MahjongTile.cs" id="2_tcin4"]
 
 [node name="PanelContainer" type="PanelContainer" unique_id=1577852728]
+custom_minimum_size = Vector2(80, 120)
 offset_right = 40.0
 offset_bottom = 40.0
 theme = ExtResource("1_2nfmx")
@@ -14,3 +15,4 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="MarginContainer" unique_id=1568678144]
 layout_mode = 2
+text_overrun_behavior = 1
