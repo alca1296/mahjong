@@ -26,7 +26,9 @@ public partial class MahjongTile : PanelContainer
     private void UpdateUI()
     {
         var label = GetNodeOrNull<Label>("MarginContainer/Label");
+        var icon = GetNodeOrNull<TextureRect>("MarginContainer/Icon");
 
+        if (icon == null) return;
         if (label == null) return;
 
         if (_tile == null)
@@ -35,7 +37,12 @@ public partial class MahjongTile : PanelContainer
         }
         else
         {
-            label.Text = _tile.ToString(); ;
+            label.Text = "";
+            if (_tile is Suited s && s.Suit == Suit.Character) {
+                label.Text = $"{s.Number}";
+            }
+
+            icon.Texture = TileTextureLibrary.Instance.Get(_tile);
         }
     }
 }
