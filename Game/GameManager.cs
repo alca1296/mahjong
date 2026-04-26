@@ -9,12 +9,14 @@ namespace Mahjong;
 public abstract record GameState;
 public record GameOngoing() : GameState;
 public record DeckEmpty() : GameState;
-public record Winner(Player player, List<Meld> winningHand) : GameState;
+public record Winner(int id, Player player, List<Meld> winningHand) : GameState;
 
 public partial class GameManager : Control
 {
 	[Export] public PackedScene TileHandScene;
 	[Export] public PackedScene MahjongTileScene;
+
+	private Overlay _overlay;
 
 	private Player[] _players;
 	private Deck _deck;
@@ -60,6 +62,10 @@ public partial class GameManager : Control
 
 			// 2. Create the Visual Hand
 			var handUI = TileHandScene.Instantiate<TileHand>();
+
+			if (i != 0) handUI.Hidden = true;
+			GD.Print($"{i}: ${handUI.Hidden}");
+
 			anchor.AddChild(handUI);
 
 			// 3. Link them
@@ -70,6 +76,7 @@ public partial class GameManager : Control
 		_discardVisual = MahjongTileScene.Instantiate<MahjongTile>();
 		discardAnchor.AddChild(_discardVisual);
 
+		_overlay = GetNode<Overlay>("Overlay");
 
 		RunGameLoop();
 		RefreshVisuals();
@@ -106,18 +113,24 @@ public partial class GameManager : Control
 					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
 				}
 
-				foreach (var meld in winner.player.Hand.Melds)
-				{
-					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
-				}
+				_overlay.ShowWin(winner.id);
 				break;
 			}
 			else if (state is DeckEmpty)
 			{
 				GD.Print("Deck empty!");
+
+				_overlay.ShowWin(-1);
 				break;
 			}
 		}
+
+		foreach (var hand in _handVisuals)
+		{
+			hand.Hidden = false;
+		}
+
+		RefreshVisuals();
 	}
 
 	public GameManager()
@@ -162,7 +175,7 @@ public partial class GameManager : Control
 		var winningHand = HandSolver.FindWinningHand(player.Hand);
 		if (winningHand != null)
 		{
-			return new Winner(player, winningHand);
+			return new Winner(_currentPlayerIndex, player, winningHand);
 		}
 
 		var discard = player.DecideDiscard();
