@@ -14,6 +14,7 @@ public partial class TileHand : VBoxContainer
     public event Action<MahjongTileRecord> OnTileDiscardRequested;
 
     private TileHandData _hand;
+
     public TileHandData Hand
     {
         get => _hand;
@@ -22,6 +23,17 @@ public partial class TileHand : VBoxContainer
             GD.Print("got new value " + value.ToString());
             _hand = value;
             UpdateUI();
+        }
+    }
+
+    private bool _hidden = false;
+
+    public bool Hidden
+    {
+        get => _hidden;
+        set
+        {
+            _hidden = value;
         }
     }
 
@@ -60,10 +72,13 @@ public partial class TileHand : VBoxContainer
 
         if (_hand == null) return;
 
+        // GD.Print($"hidden: {Hidden}");
+
         foreach (var tile in SortTiles(_hand.ConcealedTiles))
         {
 
             var tileView = CreateTileView(tile, true);
+            tileView.Hidden = Hidden;
             _concealedTilesContainer.AddChild(tileView);
         }
     }
