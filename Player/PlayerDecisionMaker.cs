@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace Mahjong;
 
+public interface IDecision {};
+
 public abstract record StealDecision;
 public record Pass() : StealDecision;
 public record Steal(Meld Meld) : StealDecision;

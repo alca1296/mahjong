@@ -79,6 +79,18 @@ public partial class GameManager
         _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Length;
     }
 
+    private bool CommitSteal(Player player, Meld meld, MahjongTileRecord discard)
+    {
+        var hand = player.Hand;
+        if (!MeldValidator.IsValidMeld(meld) || meld.Type == MeldType.Pair) return false;
+
+        foreach (var tile in meld.Tiles)
+        {
+            bool removed = hand.Remove(tile);
+            if (!removed) return false;
+        }
+    }
+
     private bool ResolveSteals(MahjongTileRecord lastDiscard)
     {
         for (int i = 1; i < _players.Length; i++)
@@ -89,11 +101,9 @@ public partial class GameManager
             bool isNext = (i == 1);
 
             if (player.DecideStealOrPass(lastDiscard, isNext) is Steal s && 
-                MeldValidator.CanSteal(player.Hand, lastDiscard, isNext))
+                MeldValidator.CanSteal(player.Hand, lastDiscard, isNext) &&
+                CommitSteal(player, s.Meld, lastDiscard))
             {
-                // take meld!
-                
-                
                 // next turn starts with stealing player
                 _currentPlayerIndex = idx;
                 _lastDiscardPlayerIndex = -1;
