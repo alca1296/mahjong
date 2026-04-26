@@ -1,23 +1,27 @@
 # Mahjong
-## Mid-Project Review
+We implemented Mahjong in Godot in C#. Players can play with bots. 
 
-### 3 Design Patterns
+### 4 Design Patterns
 The Player class uses the strategy pattern. The class controls the players hand and is responsible for executing the players turns.
 It hands off the actual decision making to an internal PlayerDecisionMaker. The decision maker is responsible only for choices. What to discard, to steal or to pass, etc.
-That way AI and interactive players can be created without having to know internal details about how the player, hand, or game is structured.
+That way AI and interactive players can be created without having to know internal details about how the player, hand, or game is structured. There is a greedy AI that implements a "lookahead" over decisions and picks the choice that maximizes a score heuristic. There is also a "dumb" AI that just discards tiles randomly and never tries to steal tiles.
 
-The Player class will use the push observer pattern. We will have a GameManager class or something similar which controls the state of the whole game.
-Whenever something happens (new turn, a player discards, a player forms a meld) the GameManager will push the information to the players via one of their relevant methods. "YourTurn", "OtherTurn", etc.
+Many UI classes we implemented use the push observer pattern. We have a GameManager class which controls the state of the whole game.
+Whenever something happens (new turn, a player discards, a player forms a meld) the GameManager will push the information to the views of the players and board via one of their relevant methods.
 
-The MahjongTileRecord class uses the factory pattern. We have a factory method which is responsible for creating the full deck of mahjong tiles. That way, if we add or remove tiles no clients have to be updated. Only the factory does. It also means we don't have any duplicate instantiation code anywhere.
+The MahjongTileRecord class uses the factory pattern. We have a factory method which is responsible for creating the full deck of mahjong tiles. That way, if we add or remove tiles no clients have to be updated. Only the factory does. It also means we don't have any duplicate instantiation code anywhere. A factory pattern is also used for all player strategy creation and all 
+
+We use the singleton pattern in `TileTextureLibrary`. This class loads all textures for all tiles on creation of its single instance, to ensure that all images are loaded just once. Then, all other classes that need those images can just query the singleton instance.
+
+We also use the command pattern to an extent in `IPlayerDecisionMaker`. There is a method to decide whether to steal a tile or pass, and this option is implemented a records deriving from a single record. The `GameManager` then interpets these commands from the players to either pass their steal opportunity or attempt to steal the last discarded tile.
 
 ### Foundational Classes
 
-We have a number of foundational classes for this project done. We have a Player and PlayerDecisionMaker, responsible for managing a players hand and making gameplay decisions. A basic AI bot is complete.
+We have a Player and PlayerDecisionMaker, responsible for managing a players hand and making gameplay decisions. A basic and complex bot strategy is done. 
 
-We also have classes representing player hands, and tiles, as well as some important meld validation code.
+We also have classes representing player hands, and tiles, as well as some important meld validation code. There are some other classes for determining if the game has been won by any player after a tile draw. This requires a recursive search over the player's tiles to see if they form a valid combination of melds and a pair. There is a class which implement similar methods but calculate a score heuristic for the bot strategies to try and maximize when evaluating their options. This similarly searches over possible combinations of tiles and picks moves that create melds or partial melds. 
 
-We still need to write a GameManager that's responsible for directing the players and managing the base level game state.
+There is a GameManager that is responsible for controlling and handling all game state, as well as pushing status updates to UI elements. This stores players, the tile deck, and iterates through players to run their turns. 
 
 ### Core OO Principles
 * Polymorphism
@@ -31,8 +35,4 @@ We still need to write a GameManager that's responsible for directing the player
 
 ### Meaningful Test Cases
 We are implementing unit tests using the `xUnit.net` framework for C#. 
-All unit tests are implemented under [MahjongTests](MahjongTests/) in corresponding `*Tests.cs` files.
-Classes with unit tests include:
-* `MeldValidator` (in `MeldValidatorTests.cs`): Utility class for determining if given melds (triplet of identical tiles or sequence of suited tiles) are actually valid or not according to the rules of Mahjong. The class is tested against many combinations of 3 or 2 tiles to determine if they are valid or invalid combos.
-* `TileHandData` (in `TileHandDataTests.cs`): Class for storing a player's concealed tiles and their revealed melds. The tests just check that the hand correctly adds tiles and melds.
-* `DiscardPile` (in `TileHandDataTests.cs`): Class for storing a player's discard pile. The tests just check that the pile correctly gets or removes the player's most recently discarded tile.
+All unit tests are implemented under [MahjongTests](MahjongTests/) in corresponding `*Tests.cs` files. Many of the core game logic classes are verified with test cases: game logic like validating melds is checked, the player strategies are verified under example turns to make logically consistent decisions, data structures like the tile hand are tested to check consistency, and the central win checking algorithm (a complex, recursive DFS) is checked, among other features/classes. To test, you have to cd into the tests directory and run `dotnet test`. 
