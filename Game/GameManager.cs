@@ -103,10 +103,6 @@ public partial class GameManager : Control
 				foreach (var meld in winner.winningHand) {
 					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");	
 				}
-
-				foreach (var meld in winner.player.Hand.Melds) {
-					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
-				}
 				break;
 			} else if (state is DeckEmpty) {
 				GD.Print("Deck empty!");

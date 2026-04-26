@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Mahjong;
 
@@ -58,7 +60,7 @@ public partial class TileHand : VBoxContainer
 
         if (_hand == null) return;
 
-        foreach (var tile in _hand.ConcealedTiles)
+        foreach (var tile in SortTiles(_hand.ConcealedTiles))
         {
 
             var tileView = CreateTileView(tile, true);
@@ -77,7 +79,7 @@ public partial class TileHand : VBoxContainer
         {
             var meldBox = new HBoxContainer();
 
-            foreach (var tile in meld.Tiles)
+            foreach (var tile in SortTiles(meld.Tiles))
             {
                 var tileView = CreateTileView(tile, false);
                 meldBox.AddChild(tileView);
@@ -90,5 +92,15 @@ public partial class TileHand : VBoxContainer
     {
         DrawConcealed();
         DrawMelds();
+    }
+
+    private IReadOnlyList<MahjongTileRecord> SortTiles(IReadOnlyList<MahjongTileRecord> tiles)
+    {
+        return tiles.OrderBy(tile => tile switch {
+            Suited s => (0, (int) s.Suit * 10 + s.Number),
+            Wind w => (1, (int) w.Direction),
+            Dragon d => (2, (int) d.Color),
+            _ => (3, 0) // catch all
+        }).ToList();
     }
 }
