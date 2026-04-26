@@ -9,270 +9,287 @@ namespace Mahjong;
 public abstract record GameState;
 public record GameOngoing() : GameState;
 public record DeckEmpty() : GameState;
-public record Winner(Player player, List<Meld> winningHand) : GameState;
+public record Winner(int id, Player player, List<Meld> winningHand) : GameState;
 
 public partial class GameManager : Control
 {
-	[Export] public PackedScene TileHandScene;
-	[Export] public PackedScene MahjongTileScene;
+    [Export] public PackedScene TileHandScene;
+    [Export] public PackedScene MahjongTileScene;
 
-	private Player[] _players;
-	private Deck _deck;
-	private readonly DiscardPile _discardPile = new(); // shared discard pile for simplicity
+    private Overlay _overlay;
 
-	// game loop state
-	private int _currentPlayerIndex = 0;
-	private int _lastDiscardPlayerIndex = -1;
-	private bool _skipDrawThisTurn = false;
+    private Player[] _players;
+    private Deck _deck;
+    private readonly DiscardPile _discardPile = new(); // shared discard pile for simplicity
 
-	private List<TileHand> _handVisuals = new();
-	private MahjongTile _discardVisual = new();
+    // game loop state
+    private int _currentPlayerIndex = 0;
+    private int _lastDiscardPlayerIndex = -1;
+    private bool _skipDrawThisTurn = false;
 
-	public void Init(Player[] players, Deck deck)
-	{
-		_players = players;
-		_deck = deck;
+    private List<TileHand> _handVisuals = new();
+    private MahjongTile _discardVisual = new();
 
-		foreach (var player in _players)
-		{
-			for (int i = 0; i < 13; i++)
-			{
-				var tile = _deck.Draw();
+    public void Init(Player[] players, Deck deck)
+    {
+        _players = players;
+        _deck = deck;
 
-				if (tile != null)
-					player.ReceiveTile(tile);
-			}
-		}
-	}
+        foreach (var player in _players)
+        {
+            for (int i = 0; i < 13; i++)
+            {
+                var tile = _deck.Draw();
 
-	public override void _Ready()
-	{
-		if (_deck == null)
-		{
-			GD.PrintErr("GameManager was not initialized with a Deck!");
-			return;
-		}
+                if (tile != null)
+                    player.ReceiveTile(tile);
+            }
+        }
+    }
 
-		for (int i = 0; i < _players.Length; i++)
-		{
-			// 1. Find the anchor node (e.g., "PlayerAnchors/Anchor0")
-			var anchor = GetNode<Control>($"Anchor{i}");
+    public override void _Ready()
+    {
+        if (_deck == null)
+        {
+            GD.PrintErr("GameManager was not initialized with a Deck!");
+            return;
+        }
 
-			// 2. Create the Visual Hand
-			var handUI = TileHandScene.Instantiate<TileHand>();
-			anchor.AddChild(handUI);
+        for (int i = 0; i < _players.Length; i++)
+        {
+            // 1. Find the anchor node (e.g., "PlayerAnchors/Anchor0")
+            var anchor = GetNode<Control>($"Anchor{i}");
 
-			// 3. Link them
-			_handVisuals.Add(handUI);
-		}
+            // 2. Create the Visual Hand
+            var handUI = TileHandScene.Instantiate<TileHand>();
 
-		var discardAnchor = GetNode<Control>("AnchorDiscard");
-		_discardVisual = MahjongTileScene.Instantiate<MahjongTile>();
-		discardAnchor.AddChild(_discardVisual);
+            if (i != 0) handUI.Hidden = true;
+            GD.Print($"{i}: ${handUI.Hidden}");
 
+            anchor.AddChild(handUI);
 
-		RunGameLoop();
-		RefreshVisuals();
-	}
+            // 3. Link them
+            _handVisuals.Add(handUI);
+        }
 
-	public void RefreshVisuals()
-	{
-		for (int i = 0; i < _players.Length; i++)
-		{
-			// Pass the internal data from the Player to the TileHand script
-			_handVisuals[i].Hand = _players[i].Hand;
-		}
+        var discardAnchor = GetNode<Control>("AnchorDiscard");
+        _discardVisual = MahjongTileScene.Instantiate<MahjongTile>();
+        discardAnchor.AddChild(_discardVisual);
 
-		_discardVisual.Tile = _discardPile.End;
-	}
+        _overlay = GetNode<Overlay>("Overlay");
 
-	private async void RunGameLoop()
-	{
-		while (true)
-		{
-			var state = PlayTurn();
-			RefreshVisuals();
+        RunGameLoop();
+        RefreshVisuals();
+    }
 
-			// Pause here for 3 seconds without freezing the game
-			await Task.Delay(100);
+    public void RefreshVisuals()
+    {
+        for (int i = 0; i < _players.Length; i++)
+        {
+            // Pass the internal data from the Player to the TileHand script
+            _handVisuals[i].Hand = _players[i].Hand;
+        }
 
-			GD.Print("3 seconds passed, next turn!");
+        _discardVisual.Tile = _discardPile.End;
+    }
 
-			if (state is Winner winner) {
-				GD.Print("Winner!");
-				foreach (var meld in winner.winningHand) {
-					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");	
-				}
-				break;
-			} else if (state is DeckEmpty) {
-				GD.Print("Deck empty!");
-				break;
-			}
-		}
-	}
+    private async void RunGameLoop()
+    {
+        while (true)
+        {
+            var state = PlayTurn();
+            RefreshVisuals();
 
-	public GameManager()
-	{
-	}
+            // Pause here for 3 seconds without freezing the game
+            await Task.Delay(100);
 
-	// getters that will probably be useful for the GUI
-	public IReadOnlyList<Player> Players => _players;
-	public MahjongTileRecord? LastDiscard => _discardPile.End;
-	public int? LastDiscardPlayerIndex => _lastDiscardPlayerIndex >= 0 ? _lastDiscardPlayerIndex : null;
+            GD.Print("3 seconds passed, next turn!");
 
-	public GameState PlayTurn()
-	{
-		if (_deck.Empty()) return new DeckEmpty();
+            if (state is Winner winner) {
+                GD.Print("Winner!");
+                foreach (var meld in winner.winningHand) {
+                    GD.Print($"meld: {string.Join(" ", meld.Tiles)}");	
+                }
 
-		var player = _players[_currentPlayerIndex];
-		var lastDiscard = LastDiscard;
+                _overlay.ShowWin(winner.id);
+                break;
+            } else if (state is DeckEmpty) {
+                GD.Print("Deck empty!");
+                
+                _overlay.ShowWin(-1);
+                break;
+            }
+        }
 
-		if (!_skipDrawThisTurn)
-		{
-			MahjongTileRecord acquiredTile = _deck.Draw();
-			if (acquiredTile == null) {
-				return new DeckEmpty();
-			}
+        foreach (var hand in _handVisuals) {
+            hand.Hidden = false;
+        }
 
-			player.ReceiveTile(acquiredTile);
-			GD.Print("got a tile");
-		}
-		else
-		{
-			// turn right after a steal
-			_skipDrawThisTurn = false;
-		}
+        RefreshVisuals();
+    }
 
-		var winningHand = HandSolver.FindWinningHand(player.Hand);
-		if (winningHand != null)
-		{
-			return new Winner(player, winningHand);
-		}
+    public GameManager()
+    {
+    }
 
-		var discard = player.DecideDiscard();
-		player.Discard(discard); // TODO: check return value
+    // getters that will probably be useful for the GUI
+    public IReadOnlyList<Player> Players => _players;
+    public MahjongTileRecord? LastDiscard => _discardPile.End;
+    public int? LastDiscardPlayerIndex => _lastDiscardPlayerIndex >= 0 ? _lastDiscardPlayerIndex : null;
 
-		_discardPile.Add(discard);
-		_lastDiscardPlayerIndex = _currentPlayerIndex;
+    public GameState PlayTurn()
+    {
+        if (_deck.Empty()) return new DeckEmpty();
 
-		if (ResolveSteals(discard))
-			// turn already reassigned
-			return new GameOngoing();
+        var player = _players[_currentPlayerIndex];
+        var lastDiscard = LastDiscard;
 
-		AdvanceTurn();
-		return new GameOngoing();
-	}
+        if (!_skipDrawThisTurn)
+        {
+            MahjongTileRecord acquiredTile = _deck.Draw();
+            if (acquiredTile == null) {
+                return new DeckEmpty();
+            }
 
-	private void AdvanceTurn()
-	{
-		_currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Length;
-	}
+            player.ReceiveTile(acquiredTile);
+            GD.Print("got a tile");
+        }
+        else
+        {
+            // turn right after a steal
+            _skipDrawThisTurn = false;
+        }
 
-	// atomic meld commit, should either succeed or fail 
-	private bool TryCommitMeld(TileHandData hand, Meld meld, MahjongTileRecord discard, bool isNextPlayer)
-	{
-		if (!MeldValidator.CanSteal(hand, discard, isNextPlayer)) {
-			return false;
-		}
+        var winningHand = HandSolver.FindWinningHand(player.Hand);
+        if (winningHand != null)
+        {
+            return new Winner(_currentPlayerIndex, player, winningHand);
+        }
 
-		// will take first matching instance
-		var tiles = meld.Tiles.ToList();
-		if (!tiles.Remove(discard)) {
-			return false; // discarded tile missing from the meld for some reason
-		}
+        var discard = player.DecideDiscard();
+        player.Discard(discard); // TODO: check return value
 
-		// remove other 2 from hand
-		var rollback = new List<MahjongTileRecord>();
-		bool needsRollback = false;
+        _discardPile.Add(discard);
+        _lastDiscardPlayerIndex = _currentPlayerIndex;
 
-		foreach (var tile in tiles) {
-			if (!hand.Discard(tile)) {
-				needsRollback = true;
-				break;
-			} else {
-				rollback.Add(tile);
-			}
-		}
+        if (ResolveSteals(discard))
+            // turn already reassigned
+            return new GameOngoing();
 
-		if (needsRollback) {
-			foreach (var tile in rollback) {
-				hand.AddConcealed(tile);
-			}
-			return false;
-		}
+        AdvanceTurn();
+        return new GameOngoing();
+    }
 
-		hand.AddMeld(meld);
-		return true;
-	}
+    private void AdvanceTurn()
+    {
+        _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Length;
+    }
 
-	private bool ResolveSteals(MahjongTileRecord lastDiscard)
-	{
-		for (int i = 1; i < _players.Length; i++)
-		{
-			int idx = (_currentPlayerIndex + i) % _players.Length;
-			var player = _players[idx];
+    // atomic meld commit, should either succeed or fail 
+    private bool TryCommitMeld(TileHandData hand, Meld meld, MahjongTileRecord discard, bool isNextPlayer)
+    {
+        if (!MeldValidator.CanSteal(hand, discard, isNextPlayer)) {
+            return false;
+        }
 
-			bool isNext = (i == 1);
+        // will take first matching instance
+        var tiles = meld.Tiles.ToList();
+        if (!tiles.Remove(discard)) {
+            return false; // discarded tile missing from the meld for some reason
+        }
 
-			if (player.DecideStealOrPass(lastDiscard, isNext) is Steal steal)
-			{
-				// give tile
-				if (!TryCommitMeld(player.Hand, steal.Meld, lastDiscard, isNext)) continue;
-				_discardPile.TakeEnd();
+        // remove other 2 from hand
+        var rollback = new List<MahjongTileRecord>();
+        bool needsRollback = false;
 
-				// next turn starts with stealing player
-				_currentPlayerIndex = idx;
-				_lastDiscardPlayerIndex = -1;
-				_skipDrawThisTurn = true;
+        foreach (var tile in tiles) {
+            if (!hand.Discard(tile)) {
+                needsRollback = true;
+                break;
+            } else {
+                rollback.Add(tile);
+            }
+        }
 
-				return true;
-			}
-		}
+        if (needsRollback) {
+            foreach (var tile in rollback) {
+                hand.AddConcealed(tile);
+            }
+            return false;
+        }
 
-		return false;
-	}
+        hand.AddMeld(meld);
+        return true;
+    }
 
-	// nested builder for adding players (probably through some config)
-	public class Builder
-	{
-		private static readonly int MinPlayers = 2;
-		private static readonly int MaxPlayers = 4;
+    private bool ResolveSteals(MahjongTileRecord lastDiscard)
+    {
+        for (int i = 1; i < _players.Length; i++)
+        {
+            int idx = (_currentPlayerIndex + i) % _players.Length;
+            var player = _players[idx];
 
-		private readonly List<Player> _players = new();
-		private Deck _deck;
+            bool isNext = (i == 1);
 
-		public Builder AddPlayer(Player player)
-		{
-			_players.Add(player);
-			return this;
-		}
+            if (player.DecideStealOrPass(lastDiscard, isNext) is Steal steal)
+            {
+                // give tile
+                if (!TryCommitMeld(player.Hand, steal.Meld, lastDiscard, isNext)) continue;
+                _discardPile.TakeEnd();
 
-		public Builder AddPlayers(IEnumerable<Player> players)
-		{
-			_players.AddRange(players);
-			return this;
-		}
+                // next turn starts with stealing player
+                _currentPlayerIndex = idx;
+                _lastDiscardPlayerIndex = -1;
+                _skipDrawThisTurn = true;
 
-		public Builder SetDeck(IEnumerable<MahjongTileRecord> tiles)
-		{
-			_deck = new Deck(tiles);
-			return this;
-		}
+                return true;
+            }
+        }
 
-		public GameManager Build()
-		{
-			if (_players.Count < MinPlayers || _players.Count > MaxPlayers)
-			{
-				throw new InvalidOperationException("Mahjong needs 2-4 players");
-			}
+        return false;
+    }
 
-			if (_deck == null)
-			{
-				throw new InvalidOperationException("Deck must be set");
-			}
-			GameManager gameManager = new GameManager();
-			gameManager.Init(_players.ToArray(), _deck);
-			return gameManager;
-		}
-	}
+    // nested builder for adding players (probably through some config)
+    public class Builder
+    {
+        private static readonly int MinPlayers = 2;
+        private static readonly int MaxPlayers = 4;
+
+        private readonly List<Player> _players = new();
+        private Deck _deck;
+
+        public Builder AddPlayer(Player player)
+        {
+            _players.Add(player);
+            return this;
+        }
+
+        public Builder AddPlayers(IEnumerable<Player> players)
+        {
+            _players.AddRange(players);
+            return this;
+        }
+
+        public Builder SetDeck(IEnumerable<MahjongTileRecord> tiles)
+        {
+            _deck = new Deck(tiles);
+            return this;
+        }
+
+        public GameManager Build()
+        {
+            if (_players.Count < MinPlayers || _players.Count > MaxPlayers)
+            {
+                throw new InvalidOperationException("Mahjong needs 2-4 players");
+            }
+
+            if (_deck == null)
+            {
+                throw new InvalidOperationException("Deck must be set");
+            }
+            GameManager gameManager = new GameManager();
+            gameManager.Init(_players.ToArray(), _deck);
+            return gameManager;
+        }
+    }
 }

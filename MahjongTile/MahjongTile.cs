@@ -18,6 +18,17 @@ public partial class MahjongTile : PanelContainer
         }
     }
 
+    private bool _hidden = false;
+
+    public bool Hidden
+    {
+        get => _hidden;
+        set
+        {
+            _hidden = value;
+        }
+    }
+
     public override void _Ready()
     {
         UpdateUI();
@@ -31,13 +42,15 @@ public partial class MahjongTile : PanelContainer
         if (icon == null) return;
         if (label == null) return;
 
+        label.Text = "";
+        icon.Texture = null;
+
         if (_tile == null)
         {
             label.Text = "No tile value set.";
         }
-        else
+        else if (!Hidden)
         {
-            label.Text = "";
             if (_tile is Suited s && s.Suit == Suit.Character) {
                 label.Text = $"{s.Number}";
             }
