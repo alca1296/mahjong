@@ -15,4 +15,5 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="MarginContainer" unique_id=1568678144]
 layout_mode = 2
+text = "No tile value set."
 text_overrun_behavior = 1
