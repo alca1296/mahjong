@@ -108,6 +108,9 @@ public partial class GameManager : Control
 					GD.Print($"meld: {string.Join(" ", meld.Tiles)}");
 				}
 				break;
+			} else if (state is DeckEmpty) {
+				GD.Print("Deck empty!");
+				break;
 			}
 		}
 	}
