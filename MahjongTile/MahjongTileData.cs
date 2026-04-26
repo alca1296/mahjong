@@ -5,17 +5,17 @@ namespace Mahjong;
 
 public abstract record MahjongTileRecord
 {
-    //sealed because otherwise the children override with their default ToString method
-    public sealed override string ToString()
-    {
-        return this switch
-        {
-            Suited s => $"{s.Number} of {s.Suit}",
-            Wind w => $"{w.Direction} Wind",
-            Dragon d => $"{d.Color} Dragon",
-            _ => "Unknown"
-        };
-    }
+	//sealed because otherwise the children override with their default ToString method
+	public sealed override string ToString()
+	{
+		return this switch
+		{
+			Suited s => $"{s.Number} of {s.Suit}",
+			Wind w => $"{w.Direction} Wind",
+			Dragon d => $"{d.Color} Dragon",
+			_ => "Unknown"
+		};
+	}
 }
 
 public record Suited(Suit Suit, int Number) : MahjongTileRecord;
@@ -29,33 +29,33 @@ public enum DragonColor { Red, Green, White }
 
 public static class TileFactory
 {
-    public static List<MahjongTileRecord> CreateFullSet()
-    {
-        var tiles = new List<MahjongTileRecord>();
+	public static List<MahjongTileRecord> CreateFullSet()
+	{
+		var tiles = new List<MahjongTileRecord>();
 
-        foreach (var suit in Enum.GetValues<Suit>())
-        {
-            for (int num = 1; num <= 9; num++)
-            {
-                for (int i = 0; i < 4; i++)
-                    tiles.Add(new Suited(suit, num));
-            }
-        }
+		foreach (var suit in Enum.GetValues<Suit>())
+		{
+			for (int num = 1; num <= 9; num++)
+			{
+				for (int i = 0; i < 4; i++)
+					tiles.Add(new Suited(suit, num));
+			}
+		}
 
-        foreach (var direction in Enum.GetValues<WindType>())
-        {
-            for (int i = 0; i < 4; i++)
-                tiles.Add(new Wind(direction));
-        }
+		foreach (var direction in Enum.GetValues<WindType>())
+		{
+			for (int i = 0; i < 4; i++)
+				tiles.Add(new Wind(direction));
+		}
 
-        foreach (var color in Enum.GetValues<DragonColor>())
-        {
-            for (int i = 0; i < 4; i++)
-                tiles.Add(new Dragon(color));
-        }
+		foreach (var color in Enum.GetValues<DragonColor>())
+		{
+			for (int i = 0; i < 4; i++)
+				tiles.Add(new Dragon(color));
+		}
 
-        // If we end up doing points, also add flowers to the deck
+		// If we end up doing points, also add flowers to the deck
 
-        return tiles;
-    }
+		return tiles;
+	}
 }
