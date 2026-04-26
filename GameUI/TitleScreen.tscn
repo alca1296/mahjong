@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://dy5l816mw2voj"]
+
+[ext_resource type="Script" uid="uid://i72wb335sjvi" path="res://GameUI/TitleScreen.cs" id="1_cro3c"]
+[ext_resource type="PackedScene" uid="uid://dmtm12ygc2b3f" path="res://Game/GameScene.tscn" id="2_xgjfp"]
+
+[node name="TitleScreen" type="Control" unique_id=1043506713]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cro3c")
+GameScene = ExtResource("2_xgjfp")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1428087331]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="VBoxContainer" unique_id=1945111716]
+layout_mode = 2
+text = "Mahjong"
+
+[node name="PlayButton" type="Button" parent="VBoxContainer" unique_id=938057152]
+layout_mode = 2
+text = "Play"
+
+[node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1342385561]
+layout_mode = 2
+text = "Quit Game"
+
+[connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonPressed"]
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]

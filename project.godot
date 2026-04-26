@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Mahjong"
-run/main_scene="uid://cprhrsyo1c4yb"
+run/main_scene="uid://dy5l816mw2voj"
 config/features=PackedStringArray("4.6", "C#", "Mobile")
 config/icon="res://icon.svg"
 

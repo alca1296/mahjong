@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://cdvcq3ttdao5c"]
 
-[ext_resource type="Script" uid="uid://407lymx41ueo" path="res://TileHand.cs" id="1_ajg2f"]
+[ext_resource type="Script" uid="uid://407lymx41ueo" path="res://TileHand/TileHand.cs" id="1_ajg2f"]
+[ext_resource type="Texture2D" uid="uid://xsxxcd7tarax" path="res://icon.svg" id="2_a0v2t"]
 
 [node name="TileHand" type="VBoxContainer" unique_id=1289301232]
+custom_minimum_size = Vector2(100, 300)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -15,3 +17,7 @@ layout_mode = 2
 
 [node name="Melds" type="HBoxContainer" parent="." unique_id=435971620]
 layout_mode = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1485449184]
+position = Vector2(-2, 1)
+texture = ExtResource("2_a0v2t")

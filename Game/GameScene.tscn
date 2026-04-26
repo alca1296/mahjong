@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://dmtm12ygc2b3f"]
+
+[ext_resource type="Script" uid="uid://p1qoj4m1dti8" path="res://Game/GameManager.cs" id="1_oeyta"]
+[ext_resource type="PackedScene" uid="uid://cdvcq3ttdao5c" path="res://TileHand/TileHand.tscn" id="2_k4u12"]
+
+[node name="GameScene" type="Node2D" unique_id=2017565173]
+script = ExtResource("1_oeyta")
+TileHandScene = ExtResource("2_k4u12")
+
+[node name="Anchor0" type="Control" parent="." unique_id=757212887]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 597.0
+offset_top = 558.0
+offset_right = 637.0
+offset_bottom = 598.0
+
+[node name="Anchor1" type="Control" parent="." unique_id=673182899]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 1021.0
+offset_top = 326.0
+offset_right = 1061.0
+offset_bottom = 366.0
+
+[node name="Anchor2" type="Control" parent="." unique_id=1268343589]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 502.0
+offset_top = 49.0
+offset_right = 542.0
+offset_bottom = 89.0
+
+[node name="Anchor3" type="Control" parent="." unique_id=1848129219]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 126.0
+offset_top = 318.0
+offset_right = 166.0
+offset_bottom = 358.0
